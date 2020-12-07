@@ -2,6 +2,7 @@
 import { get } from 'lodash';
 import { Request } from 'express';
 import { v4 } from 'uuid';
+import Debug from 'debug';
 
 // Types
 import { planetDimensionsType, planetType } from '../types/planet.type';
@@ -10,6 +11,9 @@ import { appResponse } from '../types/http.type';
 // Providers
 import { validatorProvider } from './validator.provider';
 import { memoryStorageProvider } from './memory-storage.provider';
+
+// Constants
+const debug: Debug.Debugger = Debug('Martian:Provider:Planet');
 
 async function create({ body }: Request): Promise<appResponse> {
     try {
@@ -37,11 +41,14 @@ async function create({ body }: Request): Promise<appResponse> {
             name
         };
 
+        debug('New planet created -> ', planet);
+
         return {
             httpStatus: 200,
             body: planet
         }
     } catch (error) {
+        debug(error);
         return error;
     }
 }
