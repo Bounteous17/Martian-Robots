@@ -1,5 +1,5 @@
 // Modules
-import { get } from 'lodash';
+import { get, toString } from 'lodash';
 import { Request } from 'express';
 import { v4 } from 'uuid';
 import Debug from 'debug';
@@ -25,15 +25,8 @@ async function create({ body }: Request): Promise<appResponse> {
         const name: string = get(body, 'name', 'Mars');
         validatorProvider.validatePlanetName(name);
 
-        const id: string = v4();
-        // We can avoid waiting for it beeing stored
-        await memoryStorageProvider.set({
-            key: id,
-            value: new Date().toISOString()
-        });
-
         const planet: planetType = {
-            id,
+            id: v4(),
             dimensions: {
                 x: dimensions.x,
                 y: dimensions.y
@@ -41,7 +34,13 @@ async function create({ body }: Request): Promise<appResponse> {
             name
         };
 
-        debug('New planet created -> ', planet);
+        // We can avoid waiting for it beeing stored
+        await memoryStorageProvider.set({
+            key: planet.id,
+            value: toString(planet)
+        });
+
+        debug(planet);
 
         return {
             httpStatus: 200,
