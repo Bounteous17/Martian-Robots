@@ -35,6 +35,7 @@ function validatePlanetCoordinates(dimensions: planetDimensionsType): void {
 }
 
 function validatePlanetName(name: string): void {
+    // TODO: use joi
     if (!isString(name)) {
         throw {
             httpStatus: 413,
@@ -43,8 +44,18 @@ function validatePlanetName(name: string): void {
     }
 }
 
+function validatePlanetId(name: string): void {
+    if (isNil(name) || !name.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
+        throw {
+            httpStatus: 413,
+            body: { error: 'Bad planet id' }
+        } as appResponse;
+    }
+}
+
 export const validatorProvider = {
     validatePlanetDimensions,
     validatePlanetCoordinates,
-    validatePlanetName
+    validatePlanetName,
+    validatePlanetId
 }

@@ -1,7 +1,8 @@
 export interface planetType {
     id: string,
     dimensions: planetDimensionsType,
-    name: string
+    name: string,
+    lostRobotsCoordinates?: planetDimensionsType[]
 }
 
 export interface planetDimensionsType {

@@ -1,5 +1,5 @@
 // Modules
-import { get, toString } from 'lodash';
+import { get } from 'lodash';
 import { Request } from 'express';
 import { v4 } from 'uuid';
 import Debug from 'debug';
@@ -27,11 +27,12 @@ async function create({ body }: Request): Promise<appResponse> {
 
         const planet: planetType = {
             id: v4(),
+            name,
             dimensions: {
                 x: dimensions.x,
                 y: dimensions.y
             },
-            name
+            lostRobotsCoordinates: []
         };
 
         debug(planet);
@@ -52,6 +53,12 @@ async function create({ body }: Request): Promise<appResponse> {
     }
 }
 
+async function getPlanetById(id: string): Promise<planetType> {
+    const value: string = await memoryStorageProvider.get(id);
+    return JSON.parse(value);
+}
+
 export const planetProvider = {
-    create
+    create,
+    getPlanetById
 }
