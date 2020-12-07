@@ -48,6 +48,8 @@ describe('sequentially run tests', () => {
                 y: 5
             });
             expect(body.name).toBe('Jest');
+            expect(await memoryStorageProvider.get(body.id)).toBeTruthy();
+            expect(await memoryStorageProvider.get('jestId')).toBeFalsy();
         });
 
         it('create planet without name', async () => {

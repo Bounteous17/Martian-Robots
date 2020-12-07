@@ -34,13 +34,13 @@ async function create({ body }: Request): Promise<appResponse> {
             name
         };
 
+        debug(planet);
+
         // We can avoid waiting for it beeing stored
         await memoryStorageProvider.set({
             key: planet.id,
-            value: toString(planet)
+            value: JSON.stringify(planet)
         });
-
-        debug(planet);
 
         return {
             httpStatus: 200,
