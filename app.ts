@@ -5,15 +5,29 @@ import { environment } from './environment/environment';
 import express, { Express } from 'express';
 import Debug from 'debug';
 import { get } from 'lodash';
+import { json as parseJson } from 'body-parser';
+
+// Routers
+import planetRouter from './src/routers/planet.router';
 
 // Constants
 const debug: Debug.Debugger = Debug('Martian:App');
-const app: Express = express();
 const port: number = get(environment, 'api.port', 1337);
+export const app: Express = express();
 
 /**
- * Api instancing
+ * Add api middlewares
  */
-app.listen(port, () => {
+app.use(parseJson());
+
+/**
+ * Add api rounting
+ */
+app.use('/planet', planetRouter);
+
+/**
+ * Add api listener
+ */
+environment.api.autoListen && app.listen(port, () => {
     debug(`App listening on http://0.0.0.0:${port}`);
 })

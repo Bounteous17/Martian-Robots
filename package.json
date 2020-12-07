@@ -4,7 +4,8 @@
   "description": "",
   "main": "app.ts",
   "scripts": {
-    "test": "npm run test",
+    "test": "npx jest --runInBand --verbose",
+    "test:watch": "npm run test -- --watch",
     "build": "npx tsc",
     "start": "npm run build && node ./build/app.js",
     "start:debug": "npm run build && DEBUG=Martian:* node ./build/app.js"
@@ -28,13 +29,20 @@
     "@types/jest": "^26.0.16",
     "@types/lodash": "^4.14.165",
     "@types/node": "^14.14.10",
+    "@types/redis": "^2.8.28",
+    "@types/supertest": "^2.0.10",
+    "@types/uuid": "^8.3.0",
     "debug": "^4.3.1",
     "jest": "^26.6.3",
+    "supertest": "^6.0.1",
     "ts-jest": "^26.4.4",
     "typescript": "^4.1.2"
   },
   "dependencies": {
+    "body-parser": "^1.19.0",
     "express": "^4.17.1",
-    "lodash": "^4.17.20"
+    "lodash": "^4.17.20",
+    "redis": "^3.0.2",
+    "uuid": "^8.3.1"
   }
 }
