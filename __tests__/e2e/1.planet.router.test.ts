@@ -91,5 +91,65 @@ describe('sequentially run tests', () => {
             expect(status).toBe(413);
             expect(body).toEqual({ error: "X and Y non optional parameters" });
         });
+
+        it('create planet if x > 50', async () => {
+            const { body, status } = await request
+                .post('/planet')
+                .send({
+                    name: 'Jest',
+                    dimensions: {
+                        x: 70,
+                        y: 5
+                    }
+                });
+
+            expect(status).toBe(413);
+            expect(body).toEqual({ error: "Maximum coordinate value is 50" });
+        });
+
+        it('create planet if y > 50', async () => {
+            const { body, status } = await request
+                .post('/planet')
+                .send({
+                    name: 'Jest',
+                    dimensions: {
+                        x: 30,
+                        y: 60
+                    }
+                });
+
+            expect(status).toBe(413);
+            expect(body).toEqual({ error: "Maximum coordinate value is 50" });
+        });
+
+        it('create planet if x < 0', async () => {
+            const { body, status } = await request
+                .post('/planet')
+                .send({
+                    name: 'Jest',
+                    dimensions: {
+                        x: -20,
+                        y: 6
+                    }
+                });
+
+            expect(status).toBe(413);
+            expect(body).toEqual({ error: "Maximum coordinate value is 50" });
+        });
+
+        it('create planet if y < 0', async () => {
+            const { body, status } = await request
+                .post('/planet')
+                .send({
+                    name: 'Jest',
+                    dimensions: {
+                        x: 30,
+                        y: -30
+                    }
+                });
+
+            expect(status).toBe(413);
+            expect(body).toEqual({ error: "Maximum coordinate value is 50" });
+        });
     });
 });

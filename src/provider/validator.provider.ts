@@ -1,11 +1,11 @@
 // Modules
-import { get, isNumber, isString } from "lodash";
+import { get, isNumber, isString, lte, gt, isNil } from "lodash";
 
 // Types
 import { appResponse } from "../types/http.type";
 import { planetDimensionsType } from "../types/planet.type";
 
-export function validatePlanetDimensions(dimensions: planetDimensionsType): void {
+function validatePlanetDimensions(dimensions: planetDimensionsType): void {
     const x: number = get(dimensions, 'x', null);
     const y: number = get(dimensions, 'y', null);
 
@@ -15,9 +15,26 @@ export function validatePlanetDimensions(dimensions: planetDimensionsType): void
             body: { error: 'X and Y non optional parameters' }
         } as appResponse;
     }
+
+    validatePlanetCoordinates(dimensions);
 }
 
-export function validatePlanetName(name: string): void {
+function validatePlanetCoordinates(dimensions: planetDimensionsType): void {
+    const x: number = get(dimensions, 'x', -1);
+    const y: number = get(dimensions, 'y', -1);
+
+    const maxCoordinate: number = 50;
+    const invalidCoordinate: number = [x, y].find((value: number) => !(gt(value, 0) && lte(value, maxCoordinate)));
+
+    if (!isNil(invalidCoordinate)) {
+        throw {
+            httpStatus: 413,
+            body: { error: `Maximum coordinate value is ${maxCoordinate}` }
+        } as appResponse;
+    }
+}
+
+function validatePlanetName(name: string): void {
     if (!isString(name)) {
         throw {
             httpStatus: 413,
@@ -28,5 +45,6 @@ export function validatePlanetName(name: string): void {
 
 export const validatorProvider = {
     validatePlanetDimensions,
+    validatePlanetCoordinates,
     validatePlanetName
 }
