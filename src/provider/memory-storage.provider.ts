@@ -1,3 +1,6 @@
+// Environment
+import { environment } from '../../environment/environment';
+
 // Modules
 import { isNil } from 'lodash';
 import { createClient, RedisClient } from 'redis';
@@ -9,7 +12,7 @@ let clientSet;
 
 function getClient(): RedisClient {
     if (isNil(client)) {
-        client = createClient();
+        client = createClient(environment.redis);
     }
 
     return client;
