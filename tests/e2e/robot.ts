@@ -22,7 +22,7 @@ export const robotRouterTestSuite = () => describe('robot.router', () => {
     });
 
     describe('should not fail', () => {
-        it('robot input 1', async () => {
+        it('robot one input', async () => {
             const { body, status } = await request
                 .post('/robot')
                 .send({
@@ -37,13 +37,13 @@ export const robotRouterTestSuite = () => describe('robot.router', () => {
 
             expect(status).toBe(200);
             expect(body.orientation).toBe('E');
-            expect(body.coordinate).toEqual({
+            expect(body.coordinates).toEqual({
                 x: 1,
                 y: 1
             });
         });
 
-        it('robot input 2', async () => {
+        it('robot two input', async () => {
             const { body, status } = await request
                 .post('/robot')
                 .send({
@@ -58,13 +58,13 @@ export const robotRouterTestSuite = () => describe('robot.router', () => {
 
             expect(status).toBe(200);
             expect(body.orientation).toBe('N');
-            expect(body.coordinate).toEqual({
+            expect(body.coordinates).toEqual({
                 x: 3,
                 y: 3
             });
         });
 
-        it('robot input 3', async () => {
+        it('robot three input', async () => {
             const { body, status } = await request
                 .post('/robot')
                 .send({
@@ -79,7 +79,7 @@ export const robotRouterTestSuite = () => describe('robot.router', () => {
 
             expect(status).toBe(200);
             expect(body.orientation).toBe('S');
-            expect(body.coordinate).toEqual({
+            expect(body.coordinates).toEqual({
                 x: 2,
                 y: 3
             });
@@ -87,11 +87,37 @@ export const robotRouterTestSuite = () => describe('robot.router', () => {
     });
 
     describe('should fail', () => {
-        it('failed to create if missing initial orientation', async () => {
+        it('should not create the robot if missing initial orientation', async () => {
             const { body, status } = await request
                 .post('/robot')
                 .send({
                     planetId: process.env.JEST_PLANET_ID,
+                    coordinates: {
+                        x: 0,
+                        y: 3
+                    },
+                    positions: 'LLFFFLFLFL'
+                });
+
+            expect(status).toBe(413);
+        });
+
+        it('should not create the robot if missing coordinates', async () => {
+            const { body, status } = await request
+                .post('/robot')
+                .send({
+                    planetId: process.env.JEST_PLANET_ID,
+                    orientation: 'W',
+                    positions: 'LLFFFLFLFL'
+                });
+
+            expect(status).toBe(413);
+        });
+
+        it('should not create the robot if missing planetId', async () => {
+            const { body, status } = await request
+                .post('/robot')
+                .send({
                     coordinates: {
                         x: 0,
                         y: 3

@@ -7,6 +7,7 @@ import Debug from 'debug';
 import { get } from 'lodash';
 import { json as parseJson } from 'body-parser';
 import { v4 } from 'uuid';
+import cors from 'cors';
 
 // Routers
 import planetRouter from './src/routers/planet.router';
@@ -20,6 +21,7 @@ export const app: Express = express();
 /**
  * Add api middlewares
  */
+app.use(cors());
 app.use(parseJson());
 app.use((request: Request, response: Response, next: NextFunction) => {
     const requestId: string = v4();
