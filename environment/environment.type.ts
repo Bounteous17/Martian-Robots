@@ -1,4 +1,4 @@
-export interface environment {
+export interface environmentType {
     api: {
         autoListen: boolean,
         port: number

@@ -6,6 +6,26 @@
 
 ## Getting Started
 
+- Create an environment file
+```bash
+touch environment/environment.ts
+```
+- Append content
+```ts
+import { environmentType } from "./environment.type";
+
+export const environment: environmentType = {
+    api: {
+        autoListen: true,
+        port: 8080
+    },
+    redis: {
+        host: 'localhost',
+        port: 6379,
+    }
+}
+```
+
 ### Run locally
 ```bash
 npm run docker:compose:up
