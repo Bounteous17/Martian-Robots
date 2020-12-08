@@ -31,7 +31,7 @@ app.use((request: Request, response: Response, next: NextFunction) => {
 });
 
 /**
- * Add api rounting
+ * Add api public rounting
  */
 app.use('/planet', planetRouter);
 app.use('/robot', robotRouter);
