@@ -1,15 +1,9 @@
 // Environment
-import { environment as originalEnvironment } from '../../environment/environment';
+import { environment } from '../../environment/environment';
 
 // Modules
 import supertest, { SuperTest, Test } from 'supertest';
-import { mocked } from "ts-jest/utils";
 import { Server } from 'http';
-
-// Mocking environment
-jest.mock('../../environment/environment');
-const environment = mocked(originalEnvironment, true);
-environment.api.autoListen = false;
 
 // Providers
 import { app } from '../../app';
