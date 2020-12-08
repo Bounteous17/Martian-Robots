@@ -92,4 +92,21 @@ export const robotRouterTestSuite = () => describe('robot.router', () => {
         });
     });
 
+    describe('should fail', () => {
+        it('failed to create if missing initial orientation', async () => {
+            const { body, status } = await request
+                .post('/robot')
+                .send({
+                    planetId: process.env.JEST_PLANET_ID,
+                    coordinates: {
+                        x: 0,
+                        y: 3
+                    },
+                    positions: 'LLFFFLFLFL'
+                });
+
+            expect(status).toBe(413);
+        });
+    })
+
 });
