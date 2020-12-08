@@ -11,7 +11,9 @@
     "build": "npx tsc",
     "start": "npm run build && node ./build/app.js",
     "start:debug": "npm run build && DEBUG=Martian:* node ./build/app.js",
-    "docker:up": "docker-compose up"
+    "docker:compose:up": "docker-compose up",
+    "docker:build": "docker build -t $npm_package_name . && npm run docker:tag",
+    "docker:tag": "docker tag $npm_package_name:latest $npm_package_name:$npm_package_version"
   },
   "repository": {
     "type": "git",
