@@ -5,9 +5,9 @@ import { get, isNumber, isString, lte, isNil, eq, gte } from "lodash";
 import { appResponse } from "../types/http.type";
 import { coordinatesType } from "../types/planet.type";
 
-function validatePlanetDimensions(dimensions: coordinatesType): void {
-    const x: number = get(dimensions, 'x', null);
-    const y: number = get(dimensions, 'y', null);
+function validatePlanetDimensions(coordinates: coordinatesType): void {
+    const x: number = get(coordinates, 'x', null);
+    const y: number = get(coordinates, 'y', null);
 
     if (!isNumber(x) || !isNumber(y)) {
         throw {
@@ -16,12 +16,12 @@ function validatePlanetDimensions(dimensions: coordinatesType): void {
         } as appResponse;
     }
 
-    validatePlanetCoordinates(dimensions);
+    validatePlanetCoordinates(coordinates);
 }
 
-function validatePlanetCoordinates(dimensions: coordinatesType): void {
-    const x: number = get(dimensions, 'x', -1);
-    const y: number = get(dimensions, 'y', -1);
+function validatePlanetCoordinates(coordinates: coordinatesType): void {
+    const x: number = get(coordinates, 'x', -1);
+    const y: number = get(coordinates, 'y', -1);
 
     const maxCoordinate: number = 50;
     const invalidCoordinate: number = [x, y].find((value: number) => !(gte(value, 0) && lte(value, maxCoordinate)));
@@ -63,6 +63,7 @@ function validateRobotPositions(positions: string): void {
 }
 
 function validateRobotOrientation(orientation: string): void {
+    // TODO: use joi
     if (isNil(orientation) || (!eq(orientation, 'N') && !eq(orientation, 'S') && !eq(orientation, 'E') && !eq(orientation, 'W'))) {
         throw {
             httpStatus: 413,
