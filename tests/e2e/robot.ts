@@ -41,6 +41,7 @@ export const robotRouterTestSuite = () => describe('robot.router', () => {
                 x: 1,
                 y: 1
             });
+            expect(body.robotLostUnexpectedly).toBeFalsy();
         });
 
         it('robot two input', async () => {
@@ -62,6 +63,7 @@ export const robotRouterTestSuite = () => describe('robot.router', () => {
                 x: 3,
                 y: 3
             });
+            expect(body.robotLostUnexpectedly).toBeTruthy();
         });
 
         it('robot three input', async () => {
@@ -83,6 +85,7 @@ export const robotRouterTestSuite = () => describe('robot.router', () => {
                 x: 2,
                 y: 3
             });
+            expect(body.robotLostUnexpectedly).toBeFalsy();
         });
     });
 

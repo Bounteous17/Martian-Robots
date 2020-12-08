@@ -55,7 +55,7 @@ async function applyPositions({ orientation, coordinates, positions, planetId }:
     coordinates: coordinatesType,
     positions: string,
     planetId: string
-}): Promise<{ orientation: string, coordinates: coordinatesType }> {
+}): Promise<{ orientation: string, coordinates: coordinatesType, robotLostUnexpectedly: boolean }> {
     let currentCoordinates: coordinatesType = { ...coordinates };
     let currentOrientation: string = orientation;
     let robotLostUnexpectedly: boolean = false;
@@ -81,7 +81,8 @@ async function applyPositions({ orientation, coordinates, positions, planetId }:
 
     return {
         coordinates: currentCoordinates,
-        orientation: currentOrientation
+        orientation: currentOrientation,
+        robotLostUnexpectedly
     };
 }
 
@@ -109,11 +110,11 @@ async function moveToPosition({ orientation, coordinates, command, planetId }: {
     debug('');
 
     // If this positions is known from some previous lost robot, this comand is ignored
-    const ignoreCoordinate: coordinatesType = planet.lostRobotsCoordinates.find(
+    const ignoreCoordinateFromPlanetMemory: coordinatesType = planet.lostRobotsCoordinates.find(
         ({ x, y, orientation }) => eq(x, coordinates.x) && eq(y, coordinates.y) && eq(orientation, result.orientation)
     );
 
-    if (isNil(ignoreCoordinate)) {
+    if (isNil(ignoreCoordinateFromPlanetMemory)) {
         const exists: boolean = await planetProvider.isNonExistentCoordinate({
             x: result.coordinate.x,
             y: result.coordinate.y,
