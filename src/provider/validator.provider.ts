@@ -1,5 +1,5 @@
 // Modules
-import { get, isNumber, isString, lte, gt, isNil } from "lodash";
+import { get, isNumber, isString, lte, gt, isNil, eq } from "lodash";
 
 // Types
 import { appResponse } from "../types/http.type";
@@ -48,7 +48,25 @@ function validatePlanetId(name: string): void {
     if (isNil(name) || !name.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
         throw {
             httpStatus: 413,
-            body: { error: 'Bad planet id' }
+            body: { error: 'Malformed planet id' }
+        } as appResponse;
+    }
+}
+
+function validateRobotPositions(positions: string): void {
+    if (isNil(positions) || !positions.match(/^[L, R, F]\S+$/)) {
+        throw {
+            httpStatus: 413,
+            body: { error: 'Some positions command can not be recognized' }
+        } as appResponse;
+    }
+}
+
+function validateRobotOrientation(orientation: string): void {
+    if (isNil(orientation) || !eq(orientation, 'N') || !eq(orientation, 'S') || !eq(orientation, 'E') || !eq(orientation, 'W')) {
+        throw {
+            httpStatus: 413,
+            body: { error: 'Robot orientation is not valid' }
         } as appResponse;
     }
 }
@@ -57,5 +75,7 @@ export const validatorProvider = {
     validatePlanetDimensions,
     validatePlanetCoordinates,
     validatePlanetName,
-    validatePlanetId
+    validatePlanetId,
+    validateRobotPositions,
+    validateRobotOrientation
 }

@@ -15,7 +15,7 @@ environment.api.autoListen = false;
 import { memoryStorageProvider } from '../../src/provider/memory-storage.provider';
 import { app } from '../../app';
 
-describe('sequentially run tests', () => {
+describe('planet.touter', () => {
     let server: Server;
     let request: SuperTest<Test>;
 

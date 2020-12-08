@@ -1,5 +1,5 @@
 // Modules
-import { get } from 'lodash';
+import { get, isEmpty } from 'lodash';
 import { Request } from 'express';
 import { v4 } from 'uuid';
 import Debug from 'debug';
@@ -55,7 +55,16 @@ async function create({ body }: Request): Promise<appResponse> {
 
 async function getPlanetById(id: string): Promise<planetType> {
     const value: string = await memoryStorageProvider.get(id);
-    return JSON.parse(value);
+    const planet: planetType = JSON.parse(value);
+
+    if (isEmpty(planet)) {
+        throw {
+            httpStatus: 404,
+            body: { error: 'The planet can not be found on this galaxy!' }
+        } as appResponse;
+    }
+
+    return planet;
 }
 
 export const planetProvider = {
