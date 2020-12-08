@@ -15,7 +15,7 @@ import { robotRouterTestSuite } from './tests/e2e/robot';
 
 describe('sequentially run tests', () => {
     afterAll(() => {
-        // memoryStorageProvider.closeClient();
+        memoryStorageProvider.closeClient();
     });
 
     planetRouterTestSuite();
