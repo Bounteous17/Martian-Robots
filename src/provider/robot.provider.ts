@@ -1,7 +1,7 @@
 // Modules
 import Debug from 'debug';
 import { Request } from 'express';
-import { get, lte, gte, isArray, eq, isNil } from 'lodash';
+import { get, eq, isNil } from 'lodash';
 
 // Types
 import { appResponse } from '../types/http.type';
@@ -10,7 +10,6 @@ import { coordinatesOrientationType, coordinatesType, planetType } from '../type
 // Providers
 import { validatorProvider } from './validator.provider';
 import { planetProvider } from './planet.provider';
-import { memoryStorageProvider } from './memory-storage.provider';
 
 // Constants
 const debug: Debug.Debugger = Debug('Martian:Provider:Robot');
@@ -56,28 +55,32 @@ async function applyPositions({ orientation, coordinates, positions, planetId }:
     coordinates: coordinatesType,
     positions: string,
     planetId: string
-}): Promise<{ orientation: string, coordinate: coordinatesType }> {
-    let currentCoordinates: coordinatesType = coordinates;
+}): Promise<{ orientation: string, coordinates: coordinatesType }> {
+    let currentCoordinates: coordinatesType = { ...coordinates };
     let currentOrientation: string = orientation;
+    let robotLostUnexpectedly: boolean = false;
+    const commands: string[] = positions.split('');
 
-    let robotAlreadyLost: boolean = false;
-
-    for (let command = 0; command < positions.split('').length && !robotAlreadyLost; command++) {
+    // Apply commands sequentially
+    for (let command = 0; command < commands.length && !robotLostUnexpectedly; command++) {
+        // The result can be the same because the planet have memory from lost robots
         const result = await moveToPosition({
             orientation: currentOrientation,
             coordinates: currentCoordinates,
-            command: positions.split('')[command],
+            command: commands[command],
             planetId
         });
 
-        robotAlreadyLost = result.lost;
+        // If the robot get lost for the first time the following commands are ignored
+        robotLostUnexpectedly = result.robotLostUnexpectedly;
 
+        // Update the coordinates from the result for the next command
         currentCoordinates = result.currentCoordinates;
         currentOrientation = result.currentOrientation;
     }
 
     return {
-        coordinate: currentCoordinates,
+        coordinates: currentCoordinates,
         orientation: currentOrientation
     };
 }
@@ -90,17 +93,18 @@ async function moveToPosition({ orientation, coordinates, command, planetId }: {
     coordinates: coordinatesType,
     command: string,
     planetId: string
-}): Promise<{ currentCoordinates: coordinatesType, currentOrientation: string, lost: boolean }> {
+}): Promise<{ currentCoordinates: coordinatesType, currentOrientation: string, robotLostUnexpectedly: boolean }> {
     const planet: planetType = await planetProvider.getPlanetById(planetId);
 
     let currentCoordinates: coordinatesType = { ...coordinates };
     let currentOrientation: string = orientation;
     // If the robot get lost unexpectedly it will be true
-    let lost: boolean = false;
+    let robotLostUnexpectedly: boolean = false;
 
-    debug({ orientation, coordinates, command });
     const result = getNewCoordinate({ orientation, coordinates: { ...currentCoordinates }, command });
     currentOrientation = result.orientation;
+
+    debug({ orientation, coordinates, command });
     debug(result);
     debug('');
 
@@ -130,7 +134,7 @@ async function moveToPosition({ orientation, coordinates, command, planetId }: {
 
             // If it's the first time a robot get lost for this coordinates scent is null
             if (isNil(positionScent)) {
-                lost = true;
+                robotLostUnexpectedly = true;
             }
 
             // Update the lost robot coordinates for the planet
@@ -145,7 +149,7 @@ async function moveToPosition({ orientation, coordinates, command, planetId }: {
     return {
         currentCoordinates,
         currentOrientation,
-        lost
+        robotLostUnexpectedly
     }
 }
 
@@ -212,7 +216,6 @@ function getNewCoordinatesFromOrientation({ orientation, coordinates }: {
 
     return coordinates;
 }
-
 
 export const robotProvider = {
     create
