@@ -70,6 +70,26 @@ export const robotRouterTestSuite = () => describe('robot.router', () => {
             });
         });
 
+        it('robot input 3', async () => {
+            const { body, status } = await request
+                .post('/robot')
+                .send({
+                    planetId: process.env.JEST_PLANET_ID,
+                    orientation: 'W',
+                    coordinates: {
+                        x: 0,
+                        y: 3
+                    },
+                    positions: 'LLFFFLFLFL'
+                });
+
+            expect(status).toBe(200);
+            expect(body.orientation).toBe('S');
+            expect(body.coordinate).toEqual({
+                x: 2,
+                y: 3
+            });
+        });
     });
 
 });
