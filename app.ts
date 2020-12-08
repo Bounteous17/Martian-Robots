@@ -2,13 +2,15 @@
 import { environment } from './environment/environment';
 
 // Modules
-import express, { Express } from 'express';
+import express, { Express, NextFunction, Request, Response } from 'express';
 import Debug from 'debug';
 import { get } from 'lodash';
 import { json as parseJson } from 'body-parser';
+import { v4 } from 'uuid';
 
 // Routers
 import planetRouter from './src/routers/planet.router';
+import robotRouter from './src/routers/robot.router';
 
 // Constants
 const debug: Debug.Debugger = Debug('Martian:App');
@@ -19,11 +21,17 @@ export const app: Express = express();
  * Add api middlewares
  */
 app.use(parseJson());
+app.use((request: Request, response: Response, next: NextFunction) => {
+    request.headers['x-request-id'] = v4();
+    debug(`New request ${request.headers['x-request-id']}`);
+    next();
+});
 
 /**
  * Add api rounting
  */
 app.use('/planet', planetRouter);
+app.use('/robot', robotRouter);
 
 /**
  * Add api listener

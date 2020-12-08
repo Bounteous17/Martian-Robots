@@ -15,7 +15,7 @@ environment.api.autoListen = false;
 import { memoryStorageProvider } from '../../src/provider/memory-storage.provider';
 import { app } from '../../app';
 
-describe('planet.touter', () => {
+export const planetRouterTestSuite = () => describe('planet.touter', () => {
     let server: Server;
     let request: SuperTest<Test>;
 
@@ -26,7 +26,6 @@ describe('planet.touter', () => {
 
     afterAll(() => {
         server.close();
-        memoryStorageProvider.closeClient();
     });
 
     describe('should not fail', () => {
@@ -36,16 +35,18 @@ describe('planet.touter', () => {
                 .send({
                     name: 'Jest',
                     dimensions: {
-                        x: 7,
-                        y: 5
+                        x: 5,
+                        y: 3
                     }
                 });
+
+            process.env.JEST_PLANET_ID = body.id;
 
             expect(status).toBe(200);
             expect(body.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
             expect(body.dimensions).toEqual({
-                x: 7,
-                y: 5
+                x: 5,
+                y: 3
             });
             expect(body.name).toBe('Jest');
             expect(await memoryStorageProvider.get(body.id)).toBeTruthy();

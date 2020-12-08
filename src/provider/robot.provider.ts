@@ -1,7 +1,7 @@
 // Modules
 import Debug from 'debug';
 import { Request } from 'express';
-import { get, lte, gte, isArray, eq } from 'lodash';
+import { get, lte, gte, isArray, eq, isNil } from 'lodash';
 
 // Types
 import { appResponse } from '../types/http.type';
@@ -50,6 +50,7 @@ async function isNonExistenCoordinate({ x, y, orientation }: planetDimensionsOri
     const exists: boolean = lte(x, planet.dimensions.x) && gte(x, 0) && lte(y, planet.dimensions.y) && gte(y, 0);
 
     if (!exists) {
+        debug(`Coordinate outside the planet ${JSON.stringify({ x, y, orientation })}`);
         setLostRobotPreviousCoordinates({ x, y, orientation }, planet);
     }
 
@@ -57,7 +58,7 @@ async function isNonExistenCoordinate({ x, y, orientation }: planetDimensionsOri
 }
 
 async function setLostRobotPreviousCoordinates(coordinates: planetDimensionsOrientationType, planet: planetType): Promise<void> {
-    isArray(planet.lostRobotsCoordinates) && planet.lostRobotsCoordinates.concat(coordinates);
+    isArray(planet.lostRobotsCoordinates) && planet.lostRobotsCoordinates.push(coordinates);
 
     await memoryStorageProvider.set({
         key: planet.id,
@@ -74,11 +75,11 @@ async function applyPositions({ orientation, coordinates, positions, planetId }:
     let currentCoordinates: planetDimensionsType = coordinates;
     let currentOrientation: string = orientation;
 
-    positions.split('').map(async (command: string) => {
+    for (const command of positions.split('')) {
         const result = await moveToPosition({ orientation: currentOrientation, coordinates: currentCoordinates, command, planetId });
         currentCoordinates = result.currentCoordinates;
         currentOrientation = result.currentOrientation;
-    });
+    }
 
     return {
         coordinate: currentCoordinates,
@@ -97,13 +98,17 @@ async function moveToPosition({ orientation, coordinates, command, planetId }: {
     let currentCoordinates: planetDimensionsType = coordinates;
     let currentOrientation: string = orientation;
 
+    debug({ orientation, coordinates, command });
+    const result = getNewCoordinate({ orientation, coordinates: currentCoordinates, command });
+    currentOrientation = result.orientation;
+    debug(result);
+    debug('');
+
     const ignoreCoordinate: planetDimensionsType = planet.lostRobotsCoordinates.find(
-        ({ x, y, orientation }) => eq(x, coordinates.x) && eq(y, coordinates.y) && eq(currentOrientation, orientation)
+        ({ x, y, orientation }) => eq(x, coordinates.x) && eq(y, coordinates.y) && eq(orientation, result.orientation)
     );
 
-    if (!ignoreCoordinate) {
-        const result = getNewCoordinate({ orientation, coordinates: currentCoordinates, command });
-
+    if (isNil(ignoreCoordinate)) {
         const exists: boolean = await isNonExistenCoordinate({
             x: result.coordinate.x,
             y: result.coordinate.y,
@@ -115,7 +120,6 @@ async function moveToPosition({ orientation, coordinates, command, planetId }: {
                 x: result.coordinate.x,
                 y: result.coordinate.y
             };
-            currentOrientation = result.orientation;
         }
     }
 
@@ -134,29 +138,31 @@ function getNewCoordinate({ orientation, coordinates, command }: {
     let newCoordinates: planetDimensionsType = coordinates;
     const changeOrientation: boolean = eq(command, 'R') || eq(command, 'L');
 
-    switch (orientation) {
-        case 'N':
-            changeOrientation && eq(command, 'R') ? newOrientation = 'E' : newOrientation = 'W';
-            break;
-        case 'S':
-            changeOrientation && eq(command, 'R') ? newOrientation = 'W' : newOrientation = 'E';
-            break;
-        case 'E':
-            changeOrientation && eq(command, 'R') ? newOrientation = 'S' : newOrientation = 'N';
-            break;
-        case 'W':
-            changeOrientation && eq(command, 'R') ? newOrientation = 'N' : newOrientation = 'S';
-            break;
-    }
-
-    if (!changeOrientation && eq(command, 'F')) {
+    if (changeOrientation) {
+        switch (orientation) {
+            case 'N':
+                eq(command, 'R') ? newOrientation = 'E' : newOrientation = 'W';
+                break;
+            case 'S':
+                eq(command, 'R') ? newOrientation = 'W' : newOrientation = 'E';
+                break;
+            case 'E':
+                eq(command, 'R') ? newOrientation = 'S' : newOrientation = 'N';
+                break;
+            case 'W':
+                eq(command, 'R') ? newOrientation = 'N' : newOrientation = 'S';
+                break;
+        }
+    } else if (!changeOrientation && eq(command, 'F')) {
         newCoordinates = getNewCoordinateFromOrientation({ orientation, coordinates });
     }
 
-    return {
+    const result = {
         orientation: newOrientation,
         coordinate: newCoordinates
     };
+
+    return result;
 }
 
 function getNewCoordinateFromOrientation({ orientation, coordinates }: {

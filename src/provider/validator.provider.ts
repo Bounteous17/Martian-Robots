@@ -1,5 +1,5 @@
 // Modules
-import { get, isNumber, isString, lte, gt, isNil, eq } from "lodash";
+import { get, isNumber, isString, lte, isNil, eq, gte } from "lodash";
 
 // Types
 import { appResponse } from "../types/http.type";
@@ -24,7 +24,7 @@ function validatePlanetCoordinates(dimensions: planetDimensionsType): void {
     const y: number = get(dimensions, 'y', -1);
 
     const maxCoordinate: number = 50;
-    const invalidCoordinate: number = [x, y].find((value: number) => !(gt(value, 0) && lte(value, maxCoordinate)));
+    const invalidCoordinate: number = [x, y].find((value: number) => !(gte(value, 0) && lte(value, maxCoordinate)));
 
     if (!isNil(invalidCoordinate)) {
         throw {
@@ -48,7 +48,7 @@ function validatePlanetId(name: string): void {
     if (isNil(name) || !name.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
         throw {
             httpStatus: 413,
-            body: { error: 'Malformed planet id' }
+            body: { error: `Malformed planet id -> ${name}` }
         } as appResponse;
     }
 }
@@ -63,7 +63,7 @@ function validateRobotPositions(positions: string): void {
 }
 
 function validateRobotOrientation(orientation: string): void {
-    if (isNil(orientation) || !eq(orientation, 'N') || !eq(orientation, 'S') || !eq(orientation, 'E') || !eq(orientation, 'W')) {
+    if (isNil(orientation) || (!eq(orientation, 'N') && !eq(orientation, 'S') && !eq(orientation, 'E') && !eq(orientation, 'W'))) {
         throw {
             httpStatus: 413,
             body: { error: 'Robot orientation is not valid' }
