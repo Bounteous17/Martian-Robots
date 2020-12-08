@@ -22,8 +22,9 @@ export const app: Express = express();
  */
 app.use(parseJson());
 app.use((request: Request, response: Response, next: NextFunction) => {
-    request.headers['x-request-id'] = v4();
-    debug(`New request ${request.headers['x-request-id']}`);
+    const requestId: string = v4();
+    request.headers['x-request-id'] = requestId;
+    debug(`New request ${requestId} from ${request.connection.remoteAddress}`);
     next();
 });
 

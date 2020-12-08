@@ -44,6 +44,10 @@ npm run test
 npm run test:watch:debug
 ```
 
+```bash
+npm run test:coverage
+```
+
 ### Build image
 
 ```bash
