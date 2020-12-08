@@ -3,9 +3,9 @@ import { get, isNumber, isString, lte, isNil, eq, gte } from "lodash";
 
 // Types
 import { appResponse } from "../types/http.type";
-import { planetDimensionsType } from "../types/planet.type";
+import { coordinatesType } from "../types/planet.type";
 
-function validatePlanetDimensions(dimensions: planetDimensionsType): void {
+function validatePlanetDimensions(dimensions: coordinatesType): void {
     const x: number = get(dimensions, 'x', null);
     const y: number = get(dimensions, 'y', null);
 
@@ -19,7 +19,7 @@ function validatePlanetDimensions(dimensions: planetDimensionsType): void {
     validatePlanetCoordinates(dimensions);
 }
 
-function validatePlanetCoordinates(dimensions: planetDimensionsType): void {
+function validatePlanetCoordinates(dimensions: coordinatesType): void {
     const x: number = get(dimensions, 'x', -1);
     const y: number = get(dimensions, 'y', -1);
 

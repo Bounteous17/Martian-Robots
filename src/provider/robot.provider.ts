@@ -5,7 +5,7 @@ import { get, lte, gte, isArray, eq, isNil } from 'lodash';
 
 // Types
 import { appResponse } from '../types/http.type';
-import { planetDimensionsOrientationType, planetDimensionsType, planetType } from '../types/planet.type';
+import { coordinatesOrientationType, coordinatesType, planetType } from '../types/planet.type';
 
 // Providers
 import { validatorProvider } from './validator.provider';
@@ -15,6 +15,9 @@ import { memoryStorageProvider } from './memory-storage.provider';
 // Constants
 const debug: Debug.Debugger = Debug('Martian:Provider:Robot');
 
+/**
+ * Create robot with the initial coordinates and orientation
+ */
 async function create({ body }: Request): Promise<appResponse> {
     try {
         // Define and validate planet id
@@ -22,7 +25,7 @@ async function create({ body }: Request): Promise<appResponse> {
         validatorProvider.validatePlanetId(planetId);
 
         // Define and validate new robot initial coordinates
-        const coordinates: planetDimensionsType = get(body, 'coordinates', null);
+        const coordinates: coordinatesType = get(body, 'coordinates', null);
         validatorProvider.validatePlanetDimensions(coordinates);
 
         // Define and validate new robot positions
@@ -45,33 +48,16 @@ async function create({ body }: Request): Promise<appResponse> {
     }
 }
 
-async function isNonExistenCoordinate({ x, y, orientation }: planetDimensionsOrientationType, planetId: string): Promise<boolean> {
-    const planet: planetType = await planetProvider.getPlanetById(planetId);
-    const exists: boolean = lte(x, planet.dimensions.x) && gte(x, 0) && lte(y, planet.dimensions.y) && gte(y, 0);
-
-    if (!exists) {
-        debug(`Coordinate outside the planet ${JSON.stringify({ x, y, orientation })}`);
-    }
-
-    return exists;
-}
-
-async function setLostRobotPreviousCoordinates(coordinates: planetDimensionsOrientationType, planet: planetType): Promise<void> {
-    isArray(planet.lostRobotsCoordinates) && planet.lostRobotsCoordinates.push(coordinates);
-
-    await memoryStorageProvider.set({
-        key: planet.id,
-        value: JSON.stringify(planet)
-    });
-}
-
+/**
+ * Calculate final robot position from all the commands
+ */
 async function applyPositions({ orientation, coordinates, positions, planetId }: {
     orientation: string,
-    coordinates: planetDimensionsType,
+    coordinates: coordinatesType,
     positions: string,
     planetId: string
-}): Promise<{ orientation: string, coordinate: planetDimensionsType }> {
-    let currentCoordinates: planetDimensionsType = coordinates;
+}): Promise<{ orientation: string, coordinate: coordinatesType }> {
+    let currentCoordinates: coordinatesType = coordinates;
     let currentOrientation: string = orientation;
 
     let robotAlreadyLost: boolean = false;
@@ -96,59 +82,65 @@ async function applyPositions({ orientation, coordinates, positions, planetId }:
     };
 }
 
+/**
+ * Apply tobot position from the planet preferences
+ */
 async function moveToPosition({ orientation, coordinates, command, planetId }: {
     orientation: string,
-    coordinates: planetDimensionsType,
+    coordinates: coordinatesType,
     command: string,
     planetId: string
-}): Promise<{ currentCoordinates: planetDimensionsType, currentOrientation: string, lost: boolean }> {
-    let lost: boolean = false;
+}): Promise<{ currentCoordinates: coordinatesType, currentOrientation: string, lost: boolean }> {
     const planet: planetType = await planetProvider.getPlanetById(planetId);
 
-    let currentCoordinates: planetDimensionsType = { ...coordinates };
+    let currentCoordinates: coordinatesType = { ...coordinates };
     let currentOrientation: string = orientation;
+    // If the robot get lost unexpectedly it will be true
+    let lost: boolean = false;
 
     debug({ orientation, coordinates, command });
     const result = getNewCoordinate({ orientation, coordinates: { ...currentCoordinates }, command });
     currentOrientation = result.orientation;
     debug(result);
+    debug('');
 
-    const ignoreCoordinate: planetDimensionsType = planet.lostRobotsCoordinates.find(
+    // If this positions is known from some previous lost robot, this comand is ignored
+    const ignoreCoordinate: coordinatesType = planet.lostRobotsCoordinates.find(
         ({ x, y, orientation }) => eq(x, coordinates.x) && eq(y, coordinates.y) && eq(orientation, result.orientation)
     );
 
     if (isNil(ignoreCoordinate)) {
-        const exists: boolean = await isNonExistenCoordinate({
+        const exists: boolean = await planetProvider.isNonExistentCoordinate({
             x: result.coordinate.x,
             y: result.coordinate.y,
             orientation: result.orientation
         }, planetId);
 
+        // If the new robot coordinates is valid the new position is updated
         if (exists) {
             currentCoordinates = {
                 x: result.coordinate.x,
                 y: result.coordinate.y
             };
         } else {
-            const firstSlug: planetDimensionsOrientationType = planet.lostRobotsCoordinates.find((coordinate) =>
+            // Get if the new coordinates exists from already lost robots coordinates
+            const positionScent: coordinatesOrientationType = planet.lostRobotsCoordinates.find((coordinate) =>
                 eq(result.coordinate.x, coordinate.x) && eq(result.coordinate.y, coordinate.y)
             );
 
-            if (isNil(firstSlug)) {
+            // If it's the first time a robot get lost for this coordinates scent is null
+            if (isNil(positionScent)) {
                 lost = true;
             }
 
-            setLostRobotPreviousCoordinates({
+            // Update the lost robot coordinates for the planet
+            await planetProvider.setLostRobotPreviousCoordinates({
                 x: result.coordinate.x,
                 y: result.coordinate.y,
                 orientation: result.orientation
             }, planet);
         }
-    } else {
-        debug(`This coordinates wasnt safe`);
     }
-
-    debug('');
 
     return {
         currentCoordinates,
@@ -157,13 +149,18 @@ async function moveToPosition({ orientation, coordinates, command, planetId }: {
     }
 }
 
+/**
+ * Calculate new position from command
+ */
 function getNewCoordinate({ orientation, coordinates, command }: {
     orientation: string,
-    coordinates: planetDimensionsType,
+    coordinates: coordinatesType,
     command: string
-}): { orientation: string, coordinate: planetDimensionsType } {
+}): { orientation: string, coordinate: coordinatesType } {
     let newOrientation: string = orientation;
-    let newCoordinates: planetDimensionsType = coordinates;
+    let newCoordinates: coordinatesType = coordinates;
+
+    // It's true if command different to forward
     const changeOrientation: boolean = eq(command, 'R') || eq(command, 'L');
 
     if (changeOrientation) {
@@ -182,21 +179,22 @@ function getNewCoordinate({ orientation, coordinates, command }: {
                 break;
         }
     } else if (!changeOrientation && eq(command, 'F')) {
-        newCoordinates = getNewCoordinateFromOrientation({ orientation, coordinates });
+        newCoordinates = getNewCoordinatesFromOrientation({ orientation, coordinates });
     }
 
-    const result = {
+    return {
         orientation: newOrientation,
         coordinate: newCoordinates
     };
-
-    return result;
 }
 
-function getNewCoordinateFromOrientation({ orientation, coordinates }: {
+/**
+ * Calculate coordinates from orientation
+ */
+function getNewCoordinatesFromOrientation({ orientation, coordinates }: {
     orientation: string,
-    coordinates: planetDimensionsType
-}): planetDimensionsType {
+    coordinates: coordinatesType
+}): coordinatesType {
     switch (orientation) {
         case 'N':
             coordinates.y++;

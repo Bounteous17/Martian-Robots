@@ -1,15 +1,15 @@
 export interface planetType {
     id: string,
-    dimensions: planetDimensionsType,
     name: string,
-    lostRobotsCoordinates?: planetDimensionsOrientationType[]
+    dimensions: coordinatesType,
+    lostRobotsCoordinates?: coordinatesOrientationType[]
 }
 
-export interface planetDimensionsType {
+export interface coordinatesType {
     x: number,
     y: number
 }
 
-export interface planetDimensionsOrientationType extends planetDimensionsType {
+export interface coordinatesOrientationType extends coordinatesType {
     orientation: string
 }
