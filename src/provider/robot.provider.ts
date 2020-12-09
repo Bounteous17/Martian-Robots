@@ -102,35 +102,35 @@ async function moveToPosition({ orientation, coordinates, command, planetId }: {
     // If the robot get lost unexpectedly it will be true
     let robotLostUnexpectedly: boolean = false;
 
-    const result = getNewCoordinate({ orientation, coordinates: { ...currentCoordinates }, command });
-    currentOrientation = result.orientation;
+    const updatedPosition = getNewCoordinate({ orientation, coordinates: { ...currentCoordinates }, command });
+    currentOrientation = updatedPosition.orientation;
 
     debug({ orientation, coordinates, command });
-    debug(result);
+    debug(updatedPosition);
     debug('');
 
     // If this positions is known from some previous lost robot, this comand is ignored
     const ignoreCoordinateFromPlanetMemory: coordinatesType = planet.lostRobotsCoordinates.find(
-        ({ x, y, orientation }) => eq(x, coordinates.x) && eq(y, coordinates.y) && eq(orientation, result.orientation)
+        ({ x, y, orientation }) => eq(x, coordinates.x) && eq(y, coordinates.y) && eq(orientation, updatedPosition.orientation)
     );
 
     if (isNil(ignoreCoordinateFromPlanetMemory)) {
         const exists: boolean = await planetProvider.isNonExistentCoordinate({
-            x: result.coordinate.x,
-            y: result.coordinate.y,
-            orientation: result.orientation
+            x: updatedPosition.coordinate.x,
+            y: updatedPosition.coordinate.y,
+            orientation: updatedPosition.orientation
         }, planetId);
 
         // If the new robot coordinates is valid the new position is updated
         if (exists) {
             currentCoordinates = {
-                x: result.coordinate.x,
-                y: result.coordinate.y
+                x: updatedPosition.coordinate.x,
+                y: updatedPosition.coordinate.y
             };
         } else {
             // Get if the new coordinates exists from already lost robots coordinates
             const positionScent: coordinatesOrientationType = planet.lostRobotsCoordinates.find((coordinate) =>
-                eq(result.coordinate.x, coordinate.x) && eq(result.coordinate.y, coordinate.y)
+                eq(updatedPosition.coordinate.x, coordinate.x) && eq(updatedPosition.coordinate.y, coordinate.y)
             );
 
             // If it's the first time a robot get lost for this coordinates scent is null
@@ -140,9 +140,9 @@ async function moveToPosition({ orientation, coordinates, command, planetId }: {
 
             // Update the lost robot coordinates for the planet
             await planetProvider.setLostRobotPreviousCoordinates({
-                x: result.coordinate.x,
-                y: result.coordinate.y,
-                orientation: result.orientation
+                x: updatedPosition.coordinate.x,
+                y: updatedPosition.coordinate.y,
+                orientation: updatedPosition.orientation
             }, planet);
         }
     }
@@ -163,7 +163,7 @@ function getNewCoordinate({ orientation, coordinates, command }: {
     command: string
 }): { orientation: string, coordinate: coordinatesType } {
     let newOrientation: string = orientation;
-    let newCoordinates: coordinatesType = coordinates;
+    let updatedPosition: coordinatesType = coordinates;
 
     // It's true if command different to forward
     const changeOrientation: boolean = eq(command, 'R') || eq(command, 'L');
@@ -184,19 +184,19 @@ function getNewCoordinate({ orientation, coordinates, command }: {
                 break;
         }
     } else if (!changeOrientation && eq(command, 'F')) {
-        newCoordinates = getNewCoordinatesFromOrientation({ orientation, coordinates });
+        updatedPosition = getupdatedPositionFromOrientation({ orientation, coordinates });
     }
 
     return {
         orientation: newOrientation,
-        coordinate: newCoordinates
+        coordinate: updatedPosition
     };
 }
 
 /**
  * Calculate coordinates from orientation
  */
-function getNewCoordinatesFromOrientation({ orientation, coordinates }: {
+function getupdatedPositionFromOrientation({ orientation, coordinates }: {
     orientation: string,
     coordinates: coordinatesType
 }): coordinatesType {
