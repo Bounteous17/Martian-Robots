@@ -5,8 +5,8 @@
   "main": "app.ts",
   "scripts": {
     "test": "npx jest --runInBand --verbose",
-    "test:watch": "npm run test -- --watch",
-    "test:watch:debug": "DEBUG=Martian:* npm run test -- --watch",
+    "test:watch": "npm run test -- --watchAll",
+    "test:watch:debug": "DEBUG=Martian:* npm run test:watch",
     "test:coverage": "npm run test -- --coverage",
     "build": "npx tsc",
     "start": "npm run build && node ./build/app.js",
